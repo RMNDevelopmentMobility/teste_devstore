@@ -13,7 +13,11 @@ export class GraphQLClientSingleton {
         headers: {
           'Content-Type': 'application/json',
         },
-        timeout: API_CONFIG.TIMEOUT,
+        fetch: (url, options) =>
+          fetch(url, {
+            ...options,
+            signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+          }),
       });
 
       logger.info('GraphQL client initialized', {

@@ -1,5 +1,5 @@
 import { Product, Category, createProduct } from '../../domain/entities/Product';
-import { ProductDTO, CategoryDTO } from '../dtos/ProductDTO';
+import { ProductDTO } from '../dtos/ProductDTO';
 
 export class ProductMapper {
   static toDomain(dto: ProductDTO): Product {

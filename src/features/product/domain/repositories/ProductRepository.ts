@@ -2,7 +2,7 @@ import { Either } from '@core/either';
 import { AppError } from '@core/errors';
 import { Product } from '../entities/Product';
 
-export interface GetProductsParams {
+export interface GetProductsParams extends Record<string, unknown> {
   limit?: number;
   offset?: number;
 }

@@ -952,6 +952,92 @@ A análise do repositório externo **validou nossa abordagem** e **reforçou dec
 
 ---
 
+## ⚠️ CRÍTICA TÉCNICA #3: GraphQL Client na Pasta Errada
+
+### Data: 2026-02-03
+
+### Problema Identificado pelo Desenvolvedor
+
+A IA colocou o `GraphQLClientSingleton` dentro de `/features/product/external/graphql/graphql-client.ts`.
+
+**Por que isso é uma má prática:**
+
+1. **Violação de Single Responsibility:**
+   - O client GraphQL é uma **infraestrutura compartilhada**, não específica de Product
+   - Se adicionarmos features como `User`, `Order`, todas usariam o mesmo client
+   - Feature não deve "possuir" infraestrutura global
+
+2. **Acoplamento Indevido:**
+   - Outras features precisariam importar de `/features/product/...`
+   - Cria dependência circular potencial entre features
+   - Viola o princípio de que features devem ser independentes
+
+3. **Localização Incorreta na Arquitetura:**
+   - `/core` é o lugar correto para infraestrutura compartilhada
+   - `/features/*/external` deve conter apenas código específico da feature (ex: queries GraphQL)
+
+### Solução Proposta pelo Desenvolvedor
+
+```
+O arquivo graphql-client.ts tem o erro...
+Como ele instancia um Singleton do GraphQL, acredito que o lugar
+correto seria na pasta /core
+```
+
+**Estrutura Corrigida:**
+```
+src/
+├── core/
+│   ├── graphql/           # ← NOVO: Client compartilhado
+│   │   ├── graphql-client.ts
+│   │   └── index.ts
+│   ├── either/
+│   ├── errors/
+│   └── logger/
+├── features/
+│   └── product/
+│       └── external/
+│           └── graphql/
+│               └── queries.ts  # ← Apenas queries específicas de Product
+```
+
+### Correção Adicional: Timeout Inválido
+
+A IA também usou uma propriedade `timeout` que não existe em `graphql-request`:
+
+```typescript
+// ❌ ANTES (erro de tipo)
+new GraphQLClient(endpoint, {
+  timeout: API_CONFIG.TIMEOUT,  // Não existe!
+});
+
+// ✅ DEPOIS (correto)
+new GraphQLClient(endpoint, {
+  fetch: (url, options) =>
+    fetch(url, {
+      ...options,
+      signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+    }),
+});
+```
+
+### Benefícios da Correção
+
+✅ **Separação Clara:** Infraestrutura em `/core`, queries específicas em `/features`
+✅ **Reutilização:** Qualquer feature pode usar `@core/graphql`
+✅ **Independência:** Features não dependem umas das outras
+✅ **Type Safety:** Timeout implementado corretamente com AbortSignal
+
+### Conclusão
+
+A IA cometeu dois erros:
+1. **Erro de Arquitetura:** Colocar código compartilhado dentro de uma feature
+2. **Erro de API:** Usar propriedade inexistente na biblioteca
+
+**Lição:** Sempre questionar onde o código deve viver na arquitetura, não apenas se funciona.
+
+---
+
 ## Conclusão Parcial
 
 A IA foi muito útil para:
@@ -963,10 +1049,11 @@ Mas o **pensamento crítico do desenvolvedor** foi essencial para:
 ⚠️ Corrigir estrutura de pastas (horizontal → vertical)
 ⚠️ Separar Design System adequadamente
 ⚠️ Adaptar Clean Architecture para contexto React Native
+⚠️ Mover GraphQL Client para /core (infraestrutura compartilhada)
 
 **Lição Principal:** IA é uma ferramenta poderosa, mas não substitui experiência e pensamento crítico sobre trade-offs arquiteturais.
 
 ---
 
-**Última atualização:** 2026-01-29
-**Status:** Fase de Planejamento Completa | Implementação Pendente
+**Última atualização:** 2026-02-03
+**Status:** Implementação Completa | Revisão de Código em Andamento
