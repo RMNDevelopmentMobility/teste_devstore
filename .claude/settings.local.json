@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.pagaleve.com.br)",
+      "Bash(npx expo start:*)",
+      "Bash(curl -s \"https://api.escuelajs.co/api/v1/products/57\")",
+      "Bash(curl:*)",
+      "Bash(npx expo install:*)",
+      "Bash(/usr/local/bin/npx expo install expo-splash-screen)",
+      "Bash(git init:*)",
+      "Bash(brew --version:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
