@@ -996,9 +996,14 @@ src/
 │   └── logger/
 ├── features/
 │   └── product/
+│       ├── data/
+│       │   └── datasources/
+│       │       └── ProductRemoteDataSource.ts  # ← Interface apenas
 │       └── external/
+│           ├── datasources/
+│           │   └── ProductRemoteDataSourceImpl.ts  # ← Implementação
 │           └── graphql/
-│               └── queries.ts  # ← Apenas queries específicas de Product
+│               └── queries.ts  # ← Queries específicas de Product
 ```
 
 ### Correção Adicional: Timeout Inválido
@@ -1050,6 +1055,7 @@ Mas o **pensamento crítico do desenvolvedor** foi essencial para:
 ⚠️ Separar Design System adequadamente
 ⚠️ Adaptar Clean Architecture para contexto React Native
 ⚠️ Mover GraphQL Client para /core (infraestrutura compartilhada)
+⚠️ Separar interface de datasource (/data) da implementação (/external)
 
 **Lição Principal:** IA é uma ferramenta poderosa, mas não substitui experiência e pensamento crítico sobre trade-offs arquiteturais.
 

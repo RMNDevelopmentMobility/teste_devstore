@@ -84,9 +84,9 @@ npx uri-scheme open "devstore://products/1" --ios
 ```
 src/features/
 ├── product/
-│   ├── domain/        # Entidades, interfaces
-│   ├── data/          # DTOs, repositórios
-│   ├── external/      # GraphQL, APIs
+│   ├── domain/        # Entidades, interfaces de repositório
+│   ├── data/          # DTOs, repositórios, interfaces de datasource
+│   ├── external/      # Implementações de datasource, queries GraphQL
 │   ├── presentation/  # Screens, components, hooks
 │   └── injection/     # Container de DI
 ├── cart/
@@ -265,12 +265,12 @@ export default function ProductScreen() {
 src/
 ├── features/           # Features (product, cart)
 │   └── [feature]/
-│       ├── domain/     # Entidades e casos de uso
-│       ├── data/       # DTOs, repositórios
-│       ├── external/   # GraphQL, APIs
+│       ├── domain/     # Entidades, interfaces de repositório
+│       ├── data/       # DTOs, repositórios, interfaces de datasource
+│       ├── external/   # Implementações de datasource, queries GraphQL
 │       └── presentation/ # Screens, components, hooks
 ├── design_system/      # Tema e componentes base
-├── core/               # Erros, logger, either
+├── core/               # Erros, logger, either, graphql client
 └── shared/             # Componentes compartilhados
 
 app/                    # Expo Router (file-based routes)
