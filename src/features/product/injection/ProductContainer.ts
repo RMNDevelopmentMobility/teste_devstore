@@ -1,5 +1,6 @@
 import { ProductRemoteDataSource } from '../data/datasources/ProductRemoteDataSource';
 import { ProductRemoteDataSourceImpl } from '../external/datasources/ProductRemoteDataSourceImpl';
+import { ProductRepository } from '../domain/repositories/ProductRepository';
 import { ProductRepositoryImpl } from '../data/repositories/ProductRepositoryImpl';
 import { GetProducts } from '../domain/use_cases/GetProducts';
 import { GetProductById } from '../domain/use_cases/GetProductById';
@@ -8,7 +9,7 @@ class ProductContainer {
   private static instance: ProductContainer | null = null;
 
   private _remoteDataSource: ProductRemoteDataSource | null = null;
-  private _repository: ProductRepositoryImpl | null = null;
+  private _repository: ProductRepository | null = null;
   private _getProductsUseCase: GetProducts | null = null;
   private _getProductByIdUseCase: GetProductById | null = null;
 
@@ -28,7 +29,7 @@ class ProductContainer {
     return this._remoteDataSource;
   }
 
-  get repository(): ProductRepositoryImpl {
+  get repository(): ProductRepository {
     if (!this._repository) {
       this._repository = new ProductRepositoryImpl(this.remoteDataSource);
     }

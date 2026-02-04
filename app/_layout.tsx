@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import { ErrorBoundary, ToastProvider, Toast, CartIcon } from '@shared/components';
+import { QUERY_CONFIG } from '@shared/constants';
 import { theme } from '@design-system/theme';
 
 // Prevent splash screen from auto-hiding
@@ -16,7 +17,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 3,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: QUERY_CONFIG.STALE_TIME,
     },
   },
 });

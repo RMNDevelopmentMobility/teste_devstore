@@ -4,6 +4,7 @@ import { Product } from '../../domain/entities/Product';
 import { AppError } from '@core/errors';
 import { isLeft } from '@core/either';
 import { GetProductsParams } from '../../domain/repositories/ProductRepository';
+import { QUERY_CONFIG } from '@shared/constants';
 
 const PAGE_SIZE = 10;
 
@@ -30,7 +31,7 @@ export const useProducts = (
 
       return result.right;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: QUERY_CONFIG.STALE_TIME, // 5 minutes
     retry: 3,
   });
 };
@@ -58,7 +59,7 @@ export const useInfiniteProducts = (): UseInfiniteQueryResult<{ pages: Product[]
       }
       return allPages.length * PAGE_SIZE;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: QUERY_CONFIG.STALE_TIME,
     retry: 3,
   });
 };
@@ -75,7 +76,7 @@ export const useProduct = (id: number): UseQueryResult<Product, AppError> => {
 
       return result.right;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: QUERY_CONFIG.STALE_TIME,
     retry: 3,
     enabled: id > 0,
   });

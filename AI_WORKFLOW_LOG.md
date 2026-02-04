@@ -1043,6 +1043,72 @@ A IA cometeu dois erros:
 
 ---
 
+## ⚠️ CRÍTICA TÉCNICA #4: Valores Hardcoded nos Hooks
+
+### Data: 2026-02-03
+
+### Problema Identificado pelo Desenvolvedor
+
+A IA colocou valores de configuração do TanStack Query hardcoded diretamente nos hooks:
+
+```typescript
+// ❌ ANTES (hardcoded em múltiplos lugares)
+staleTime: 5 * 60 * 1000, // 5 minutes
+```
+
+Encontrado em:
+- `app/_layout.tsx` (QueryClient defaults)
+- `src/features/product/presentation/hooks/useProducts.ts` (3 ocorrências)
+
+**Por que isso é uma má prática:**
+
+1. **Violação de DRY (Don't Repeat Yourself):**
+   - Mesmo valor repetido em 4 lugares diferentes
+   - Mudança requer editar múltiplos arquivos
+
+2. **Manutenibilidade:**
+   - Difícil encontrar todos os lugares que usam o valor
+   - Risco de inconsistência se um lugar for esquecido
+
+3. **Configurabilidade:**
+   - Valores de configuração devem estar centralizados
+   - Facilita ajustes futuros (ex: diferentes staleTime por ambiente)
+
+### Solução Proposta pelo Desenvolvedor
+
+Criar arquivo de configuração dedicado para TanStack Query:
+
+```typescript
+// src/shared/constants/query.ts
+export const QUERY_CONFIG = {
+  STALE_TIME: 5 * 60 * 1000, // 5 minutos
+  GC_TIME: 10 * 60 * 1000,   // 10 minutos (garbage collection)
+} as const;
+```
+
+**Uso:**
+```typescript
+// ✅ DEPOIS (centralizado)
+import { QUERY_CONFIG } from '@shared/constants';
+
+staleTime: QUERY_CONFIG.STALE_TIME,
+```
+
+### Benefícios da Correção
+
+✅ **Single Source of Truth:** Um único lugar para configurações de query
+✅ **Manutenibilidade:** Mudança em um arquivo afeta todos os usos
+✅ **Extensibilidade:** Fácil adicionar novas configurações (GC_TIME, retry, etc.)
+✅ **Legibilidade:** `QUERY_CONFIG.STALE_TIME` é mais expressivo que `5 * 60 * 1000`
+
+### Conclusão
+
+A IA não considerou a centralização de valores de configuração. Embora funcional, o código hardcoded dificulta manutenção a longo prazo.
+
+**Lição:** Identificar "magic numbers" e extraí-los para constantes nomeadas em arquivos de configuração.
+
+---
+
 ## Conclusão Parcial
 
 A IA foi muito útil para:
@@ -1056,6 +1122,7 @@ Mas o **pensamento crítico do desenvolvedor** foi essencial para:
 ⚠️ Adaptar Clean Architecture para contexto React Native
 ⚠️ Mover GraphQL Client para /core (infraestrutura compartilhada)
 ⚠️ Separar interface de datasource (/data) da implementação (/external)
+⚠️ Centralizar configurações de query em arquivo dedicado
 
 **Lição Principal:** IA é uma ferramenta poderosa, mas não substitui experiência e pensamento crítico sobre trade-offs arquiteturais.
 
