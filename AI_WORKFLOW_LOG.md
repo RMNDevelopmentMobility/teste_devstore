@@ -1525,5 +1525,192 @@ Mas o **pensamento crítico do desenvolvedor** foi essencial para:
 
 ---
 
-**Última atualização:** 2026-02-03
-**Status:** Implementação Completa | Revisão de Código em Andamento
+## ✅ IMPLEMENTAÇÃO: Testes Unitários das Features
+
+### Data: 2026-02-04
+
+### Contexto
+
+Como bônus do teste técnico, foram implementados testes unitários para as features `/cart` e `/product`, cobrindo todas as camadas da Clean Architecture (domain, data, external, presentation).
+
+### Infraestrutura de Testes
+
+**Arquivos criados:**
+- `jest.config.js` - Configuração do Jest com path aliases
+- `jest.setup.js` - Setup com mocks de AsyncStorage e logger
+
+**Dependências adicionadas:**
+```json
+{
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-expo": "~54.0.0",
+    "@testing-library/react-native": "^12.4.0",
+    "@types/jest": "^29.5.0",
+    "react-test-renderer": "19.1.0"
+  }
+}
+```
+
+### Estrutura de Testes (Convenção React)
+
+Seguimos a convenção de **co-location** do ecossistema React/JavaScript, onde testes ficam em pastas `__tests__` próximas ao código que testam:
+
+```
+src/features/cart/
+├── domain/
+│   ├── entities/
+│   │   ├── Cart.ts
+│   │   └── __tests__/
+│   │       └── Cart.test.ts
+│   └── use_cases/
+│       ├── AddToCart.ts
+│       └── __tests__/
+│           └── AddToCart.test.ts
+├── data/
+│   └── repositories/
+│       ├── CartRepositoryImpl.ts
+│       └── __tests__/
+│           └── CartRepositoryImpl.test.ts
+└── presentation/
+    └── hooks/
+        ├── useCart.ts
+        └── __tests__/
+            └── useCart.test.ts
+```
+
+**Alternativa Flutter (não adotada):**
+```
+test/
+└── features/cart/domain/entities/
+    └── Cart.test.ts
+```
+
+A convenção React foi escolhida por ser:
+- ✅ Padrão do Create React App, Next.js, Expo
+- ✅ Testes acompanham o código em refatorações
+- ✅ Configuração padrão do Jest
+
+### Cobertura de Testes
+
+| Camada | Feature | Arquivo | Cobertura |
+|--------|---------|---------|-----------|
+| **Domain** | Cart | Cart.test.ts | 100% |
+| **Domain** | Cart | CartItem.test.ts | 100% |
+| **Domain** | Cart | AddToCart.test.ts | 100% |
+| **Domain** | Cart | UpdateQuantity.test.ts | 100% |
+| **Domain** | Product | Product.test.ts | 100% |
+| **Domain** | Product | GetProducts.test.ts | 100% |
+| **Domain** | Product | GetProductById.test.ts | 100% |
+| **Data** | Cart | CartRepositoryImpl.test.ts | 100% |
+| **Data** | Product | ProductRepositoryImpl.test.ts | 100% |
+| **Data** | Product | ProductMapper.test.ts | 100% |
+| **External** | Cart | ZustandCartStore.test.ts | 100% |
+| **External** | Product | ProductRemoteDataSourceImpl.test.ts | 100% |
+| **Presentation** | Cart | useCart.test.ts | 92.85% |
+| **Presentation** | Product | useProducts.test.tsx | 100% |
+
+### Resultados Finais
+
+```
+Test Suites: 14 passed, 14 total
+Tests:       100 passed, 100 total
+
+Coverage:
+- Statements: 98.08%
+- Branches:   92%
+- Functions:  95.16%
+- Lines:      99.31%
+```
+
+### Técnicas de Mock Utilizadas
+
+**1. Mock do GraphQL Client:**
+```typescript
+const mockRequest = jest.fn();
+jest.mock('@core/graphql', () => ({
+  graphqlClient: {
+    request: (...args) => mockRequest(...args),
+  },
+}));
+```
+
+**2. Mock do Zustand Store:**
+```typescript
+const mockState = {
+  cart: createEmptyCart(),
+  setItems: jest.fn(),
+};
+
+jest.mock('../../../external/stores/ZustandCartStore', () => ({
+  useZustandCartStore: {
+    getState: () => mockState,
+    subscribe: jest.fn(() => jest.fn()),
+  },
+}));
+```
+
+**3. Mock do TanStack Query (wrapper):**
+```typescript
+const wrapper = ({ children }) => (
+  <QueryClientProvider client={queryClient}>
+    {children}
+  </QueryClientProvider>
+);
+
+const { result } = renderHook(() => useProducts(), { wrapper });
+```
+
+### Configuração de Coverage
+
+Excluímos da cobertura arquivos que não têm código executável ou requerem setup complexo:
+
+```javascript
+// jest.config.js
+collectCoverageFrom: [
+  'src/features/**/domain/**/*.ts',
+  'src/features/**/data/**/*.ts',
+  'src/features/**/external/**/*.ts',
+  'src/features/**/presentation/hooks/**/*.ts',
+  // Excluir interfaces (sem código)
+  '!src/features/**/domain/repositories/*.ts',
+  // Excluir screens/components (requerem mocks de navegação)
+  '!src/features/**/presentation/screens/**/*.tsx',
+  '!src/features/**/presentation/components/**/*.tsx',
+],
+coverageThreshold: {
+  global: {
+    branches: 70,
+    functions: 85,
+    lines: 85,
+    statements: 85,
+  },
+},
+```
+
+### Benefícios da Abordagem
+
+1. **Clean Architecture Facilita Testes:**
+   - Interfaces permitem mocks fáceis
+   - Cada camada é testável isoladamente
+   - Dependency Injection simplifica substituição de dependências
+
+2. **Cobertura Alta nas Camadas Críticas:**
+   - Domain (regras de negócio): 100%
+   - Data (transformações): 100%
+   - External (integrações): 100%
+
+3. **Testes de Hooks com @testing-library:**
+   - `renderHook` permite testar hooks sem componentes
+   - `waitFor` lida com operações assíncronas
+
+### Conclusão
+
+A arquitetura Clean Architecture com abstrações (interfaces) provou ser altamente testável. Os mesmos benefícios de desacoplamento que facilitam manutenção também facilitam testes unitários.
+
+**Lição:** Investir em abstrações no início do projeto paga dividendos na hora de escrever testes.
+
+---
+
+**Última atualização:** 2026-02-04
+**Status:** Implementação Completa | Testes Unitários Implementados
