@@ -210,9 +210,14 @@ test_devstore/
 │       ├── types/                # Types globais
 │       │   └── global.d.ts
 │       │
-│       └── constants/            # Constantes globais
-│           ├── api.ts            # API_CONFIG (endpoint, timeout)
-│           ├── query.ts          # QUERY_CONFIG (staleTime, gcTime)
+│       ├── constants/            # Constantes globais
+│       │   ├── api.ts            # API_CONFIG (endpoint, timeout)
+│       │   ├── query.ts          # QUERY_CONFIG (staleTime, gcTime)
+│       │   └── index.ts
+│       │
+│       └── utils/                # Utilitários compartilhados
+│           ├── formatters.ts     # formatPrice (formatação de moeda)
+│           ├── image.ts          # cleanImageUrl, getValidImageUrl
 │           └── index.ts
 │
 ├── __tests__/                    # Testes (espelham a estrutura src/)
