@@ -3,33 +3,13 @@ import { View, Image, StyleSheet, Pressable, Text } from 'react-native';
 import { router } from 'expo-router';
 import { Card, Typography, Button } from '@design-system';
 import { theme } from '@design-system/theme';
+import { formatPrice, getValidImageUrl } from '@shared/utils';
 import { Product } from '../../domain/entities/Product';
 
 interface ProductCardProps {
   product: Product;
   onAddToCart: () => void;
 }
-
-const cleanImageUrl = (url: string): string => {
-  if (!url) return '';
-  // Remove brackets and quotes that some APIs return
-  let cleaned = url.replace(/^\[?"?|"?\]?$/g, '');
-  // Trim whitespace
-  cleaned = cleaned.trim();
-  // Check if it's a valid URL
-  if (!cleaned.startsWith('http://') && !cleaned.startsWith('https://')) {
-    return '';
-  }
-  return cleaned;
-};
-
-const getValidImageUrl = (images: readonly string[]): string | null => {
-  for (const img of images) {
-    const cleaned = cleanImageUrl(img);
-    if (cleaned) return cleaned;
-  }
-  return null;
-};
 
 const ImagePlaceholder: React.FC = () => (
   <View style={styles.placeholder}>
@@ -46,13 +26,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }
 
   const handlePress = (): void => {
     router.push(`/products/${product.id}`);
-  };
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(price);
   };
 
   const imageUrl = getValidImageUrl(product.images);

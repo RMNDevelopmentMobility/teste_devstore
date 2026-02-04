@@ -7,19 +7,10 @@ import { useCart } from '../../../cart/presentation/hooks/useCart';
 import { Typography, Button } from '@design-system';
 import { LoadingSpinner, ErrorDisplay, useToast } from '@shared/components';
 import { theme } from '@design-system/theme';
+import { formatPrice, cleanImageUrl } from '@shared/utils';
 import { AppError, ErrorType } from '@core/errors';
 
 const { width } = Dimensions.get('window');
-
-const cleanImageUrl = (url: string): string | null => {
-  if (!url) return null;
-  let cleaned = url.replace(/^\[?"?|"?\]?$/g, '');
-  cleaned = cleaned.trim();
-  if (!cleaned.startsWith('http://') && !cleaned.startsWith('https://')) {
-    return null;
-  }
-  return cleaned;
-};
 
 const LargeImagePlaceholder: React.FC = () => (
   <View style={styles.mainImagePlaceholder}>
@@ -132,13 +123,6 @@ export const ProductDetailScreen: React.FC = () => {
       });
       showToast('Produto adicionado ao carrinho', 'success');
     }
-  };
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(price);
   };
 
   if (isLoading) {

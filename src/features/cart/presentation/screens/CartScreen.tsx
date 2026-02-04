@@ -6,18 +6,12 @@ import { useCart } from '../hooks/useCart';
 import { CartItem } from '../components/CartItem';
 import { Typography, Button } from '@design-system';
 import { theme } from '@design-system/theme';
+import { formatPrice } from '@shared/utils';
 import { CartItem as CartItemEntity } from '../../domain/entities/CartItem';
 
 export const CartScreen: React.FC = () => {
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
   const insets = useSafeAreaInsets();
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(price);
-  };
 
   const handleIncrement = (item: CartItemEntity): void => {
     updateQuantity(item.productId, item.quantity + 1);

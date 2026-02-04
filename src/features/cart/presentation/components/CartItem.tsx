@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Image, StyleSheet, Pressable, Text } from 'react-native';
 import { Typography } from '@design-system';
 import { theme } from '@design-system/theme';
+import { formatPrice, cleanImageUrl } from '@shared/utils';
 import { CartItem as CartItemEntity } from '../../domain/entities/CartItem';
 
 interface CartItemProps {
@@ -65,16 +66,6 @@ const trashStyles = StyleSheet.create({
   },
 });
 
-const cleanImageUrl = (url: string): string | null => {
-  if (!url) return null;
-  let cleaned = url.replace(/^\[?"?|"?\]?$/g, '');
-  cleaned = cleaned.trim();
-  if (!cleaned.startsWith('http://') && !cleaned.startsWith('https://')) {
-    return null;
-  }
-  return cleaned;
-};
-
 const SmallImagePlaceholder: React.FC = () => (
   <View style={styles.placeholder}>
     <View style={placeholderStyles.icon}>
@@ -121,13 +112,6 @@ export const CartItem: React.FC<CartItemProps> = ({
   onRemove,
 }) => {
   const [imageError, setImageError] = useState(false);
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(price);
-  };
 
   const subtotal = item.price * item.quantity;
   const imageUrl = cleanImageUrl(item.imageUrl);
