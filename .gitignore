@@ -73,3 +73,6 @@ web-build/
 *.tsbuildinfo
 expo-env.d.ts
 # @end expo-cli
+
+# Test coverage
+coverage/

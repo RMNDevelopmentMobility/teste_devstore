@@ -59,6 +59,35 @@ npm run ios        # iOS
 npm run web        # Web
 ```
 
+### Testes
+
+```bash
+# Executar todos os testes
+npm test
+
+# Executar em modo watch (re-roda ao salvar)
+npm run test:watch
+
+# Executar com relatório de cobertura
+npm run test:coverage
+```
+
+**Estrutura de Testes:**
+
+Os testes seguem a mesma estrutura de Feature Slices, cobrindo todas as camadas:
+
+| Camada | Descrição | Exemplo |
+|--------|-----------|---------|
+| **Domain** | Entidades e Use Cases | `CartItem.test.ts`, `AddToCart.test.ts` |
+| **Data** | Repositories e Mappers | `ProductRepositoryImpl.test.ts` |
+| **External** | DataSources e Stores | `ProductRemoteDataSourceImpl.test.ts` |
+| **Presentation** | Hooks | `useProducts.test.tsx`, `useCart.test.ts` |
+
+**Tecnologias de Teste:**
+- Jest + jest-expo
+- @testing-library/react-native
+- Mocks para GraphQL, AsyncStorage e Zustand
+
 ### Testar Deep Links
 
 ```bash
