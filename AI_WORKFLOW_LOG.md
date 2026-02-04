@@ -1109,6 +1109,198 @@ A IA não considerou a centralização de valores de configuração. Embora func
 
 ---
 
+## ⚠️ CRÍTICA TÉCNICA #5: Feature Cart sem Abstração de Repositório
+
+### Data: 2026-02-03
+
+### Problema Identificado pelo Desenvolvedor
+
+A IA implementou a feature `/cart` com acoplamento direto ao Zustand:
+
+```typescript
+// ❌ ANTES: Hook acoplado diretamente ao Zustand
+import { useCartStore } from '../../data/stores/CartStore';
+
+export const useCart = () => {
+  const cart = useCartStore((state) => state.cart);
+  // ...
+};
+```
+
+**Estrutura anterior:**
+```
+src/features/cart/
+├── domain/
+│   ├── entities/
+│   └── use_cases/
+├── data/
+│   └── stores/
+│       └── CartStore.ts  # ← Zustand direto, sem abstração
+└── presentation/
+    └── hooks/
+        └── useCart.ts    # ← Acoplado ao Zustand
+```
+
+**Por que isso é uma má prática:**
+
+1. **Violação do Dependency Inversion Principle:**
+   - Presentation layer depende de implementação concreta (Zustand)
+   - Impossível trocar Zustand por outra solução sem alterar hooks
+
+2. **Inconsistência Arquitetural:**
+   - Feature `/product` segue Clean Architecture com abstrações
+   - Feature `/cart` não segue o mesmo padrão
+   - Dificulta onboarding de novos desenvolvedores
+
+3. **Testabilidade Comprometida:**
+   - Não é possível mockar o repositório em testes
+   - Testes ficam acoplados à implementação
+
+### Solução Proposta pelo Desenvolvedor
+
+Aplicar o mesmo padrão de `/product` com Repository Pattern:
+
+```
+// ✅ DEPOIS: Estrutura com abstrações
+src/features/cart/
+├── domain/
+│   ├── entities/
+│   ├── repositories/
+│   │   └── CartRepository.ts       # ← Interface (abstração)
+│   └── use_cases/
+├── data/
+│   └── repositories/
+│       └── CartRepositoryImpl.ts   # ← Implementação
+├── external/
+│   └── stores/
+│       └── ZustandCartStore.ts     # ← Detalhes do Zustand isolados
+├── injection/
+│   └── CartContainer.ts            # ← DI Container
+└── presentation/
+    └── hooks/
+        └── useCart.ts              # ← Usa CartContainer
+```
+
+**Interface do repositório:**
+```typescript
+// domain/repositories/CartRepository.ts
+export interface CartRepository {
+  getCart(): Cart;
+  addToCart(params: AddToCartParams): void;
+  removeFromCart(productId: number): void;
+  updateQuantity(productId: number, quantity: number): void;
+  clearCart(): void;
+  subscribe(listener: (cart: Cart) => void): () => void;
+}
+```
+
+**Hook refatorado:**
+```typescript
+// presentation/hooks/useCart.ts
+import { useSyncExternalStore, useCallback } from 'react';
+import { cartContainer } from '../../injection/CartContainer';
+
+export const useCart = () => {
+  const cart = useSyncExternalStore(
+    (onStoreChange) => repository.subscribe(onStoreChange),
+    () => repository.getCart()
+  );
+  // ...
+};
+```
+
+### Benefícios da Correção
+
+✅ **Dependency Inversion:** Presentation depende de abstração, não de Zustand
+✅ **Consistência:** Ambas features seguem o mesmo padrão arquitetural
+✅ **Flexibilidade:** Trocar Zustand requer apenas nova implementação de `CartRepository`
+✅ **Testabilidade:** Fácil mockar `CartRepository` em testes unitários
+✅ **Manutenibilidade:** Separação clara de responsabilidades
+
+### Conclusão
+
+A IA tratou client state (Cart) diferente de server state (Product), mas o Dependency Inversion Principle deve ser aplicado independente da origem dos dados.
+
+**Lição:** Abstrações são sobre desacoplamento, não sobre a natureza dos dados (local vs remoto).
+
+---
+
+## ⚠️ CRÍTICA TÉCNICA #6: AsyncStorage sem Abstração
+
+### Data: 2026-02-03
+
+### Problema Identificado pelo Desenvolvedor
+
+A IA usou AsyncStorage diretamente no ZustandCartStore:
+
+```typescript
+// ❌ ANTES: Dependência direta do AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+storage: createJSONStorage(() => AsyncStorage),
+```
+
+**Por que isso é uma má prática:**
+
+1. **Acoplamento a Implementação Específica:**
+   - Se quiser trocar AsyncStorage por MMKV (mais performático), precisa alterar todos os stores
+   - Não segue o mesmo padrão do GraphQL Client que foi para `/core`
+
+2. **Inconsistência Arquitetural:**
+   - GraphQL Client tem abstração em `/core/graphql`
+   - Storage não tinha abstração equivalente
+
+### Solução Proposta pelo Desenvolvedor
+
+Criar abstração de Storage em `/core/storage`:
+
+```typescript
+// src/core/storage/StorageService.ts (Interface)
+export interface StorageService {
+  getItem(key: string): Promise<string | null>;
+  setItem(key: string, value: string): Promise<void>;
+  removeItem(key: string): Promise<void>;
+  clear(): Promise<void>;
+}
+
+// src/core/storage/AsyncStorageService.ts (Implementação)
+export class AsyncStorageService implements StorageService {
+  // Wrapper do AsyncStorage
+}
+
+// src/core/storage/zustandStorageAdapter.ts (Adapter para Zustand)
+export const zustandStorageAdapter = (storageService: StorageService): StateStorage => ({
+  getItem: (name) => storageService.getItem(name),
+  setItem: (name, value) => storageService.setItem(name, value),
+  removeItem: (name) => storageService.removeItem(name),
+});
+```
+
+**Uso no ZustandCartStore:**
+```typescript
+// ✅ DEPOIS: Usa abstração do /core
+import { asyncStorageService, zustandStorageAdapter } from '@core/storage';
+
+const zustandStorage = zustandStorageAdapter(asyncStorageService);
+
+storage: createJSONStorage(() => zustandStorage),
+```
+
+### Benefícios da Correção
+
+✅ **Flexibilidade:** Trocar AsyncStorage por MMKV = mudar apenas `/core/storage`
+✅ **Consistência:** Mesma abordagem de GraphQL Client e Storage
+✅ **Testabilidade:** Fácil mockar storage em testes
+✅ **Single Responsibility:** `/core` concentra todas as infraestruturas compartilhadas
+
+### Conclusão
+
+A IA criou abstração para GraphQL mas não para Storage. Ambos são infraestrutura compartilhada e merecem o mesmo tratamento.
+
+**Lição:** Quando criar uma abstração para uma infraestrutura, avaliar se outras infraestruturas similares também precisam.
+
+---
+
 ## Conclusão Parcial
 
 A IA foi muito útil para:
@@ -1123,6 +1315,8 @@ Mas o **pensamento crítico do desenvolvedor** foi essencial para:
 ⚠️ Mover GraphQL Client para /core (infraestrutura compartilhada)
 ⚠️ Separar interface de datasource (/data) da implementação (/external)
 ⚠️ Centralizar configurações de query em arquivo dedicado
+⚠️ Aplicar Repository Pattern na feature Cart (consistência arquitetural)
+⚠️ Criar abstração de Storage em /core (mesma abordagem do GraphQL)
 
 **Lição Principal:** IA é uma ferramenta poderosa, mas não substitui experiência e pensamento crítico sobre trade-offs arquiteturais.
 
