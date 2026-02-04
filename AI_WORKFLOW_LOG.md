@@ -1309,6 +1309,201 @@ A IA criou abstração para GraphQL mas não para Storage. Ambos são infraestru
 
 ---
 
+## 💬 DISCUSSÃO TÉCNICA #3: Gerenciamento de Estado - Flutter/Cubit vs React/TanStack Query
+
+### Data: 2026-02-04
+
+### Contexto
+
+Durante a revisão do código, o desenvolvedor questionou como os estados (`isLoading`, `isError`, etc.) são gerenciados nos hooks da feature `/product`, comparando com a abordagem do Flutter usando Cubit.
+
+### Pergunta do Desenvolvedor
+
+```
+Quero entender melhor o hooks da feature /product; no Flutter eu tenho o Cubit,
+onde inicializo um status na tela como loading (ou algo assim) e fica claro
+na camada /presenter em como os status são utilizados e iniciados.
+Aqui no RN, vi que temos o isLoading na camada /presenter mas não entendi
+como ele está no /hooks e seu funcionamento...
+```
+
+### Análise: Paradigma Imperativo vs Declarativo
+
+#### Flutter com Cubit (Imperativo)
+
+No Flutter, o desenvolvedor **gerencia manualmente** todos os estados:
+
+```dart
+// states/product_state.dart
+abstract class ProductState {}
+class ProductInitial extends ProductState {}
+class ProductLoading extends ProductState {}
+class ProductLoaded extends ProductState {
+  final List<Product> products;
+}
+class ProductError extends ProductState {
+  final String message;
+}
+
+// cubit/product_cubit.dart
+class ProductCubit extends Cubit<ProductState> {
+  ProductCubit() : super(ProductInitial());
+
+  Future<void> getProducts() async {
+    emit(ProductLoading());  // ← Emissão manual
+    try {
+      final products = await repository.getProducts();
+      emit(ProductLoaded(products));  // ← Emissão manual
+    } catch (e) {
+      emit(ProductError(e.message));  // ← Emissão manual
+    }
+  }
+}
+```
+
+**Características:**
+- Estados explicitamente definidos como classes/sealed classes
+- Transições de estado emitidas manualmente via `emit()`
+- Controle total sobre quando cada estado acontece
+- Mais verboso, mas muito explícito
+
+#### React Native com TanStack Query (Declarativo)
+
+No React, os estados são **gerenciados automaticamente** pela biblioteca:
+
+```typescript
+// presentation/hooks/useProducts.ts
+export function useProducts(params: GetProductsParams) {
+  return useQuery({
+    queryKey: ['products', params],
+    queryFn: async () => {
+      const result = await productContainer.repository.getProducts(params);
+      if (result.isLeft()) throw result.value;
+      return result.value;
+    },
+  });
+}
+```
+
+O `useQuery` retorna automaticamente um objeto com vários estados:
+
+```typescript
+const {
+  data,         // Os dados quando sucesso
+  isLoading,    // true durante o PRIMEIRO fetch (sem cache)
+  isFetching,   // true durante QUALQUER fetch
+  isError,      // true se houve erro
+  error,        // O objeto de erro
+  isSuccess,    // true se temos dados
+  isPending,    // true se pendente (v5)
+  refetch,      // Função para refazer a query
+} = useQuery({...});
+```
+
+### Ciclo de Vida Automático
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PRIMEIRA CHAMADA                         │
+├─────────────────────────────────────────────────────────────┤
+│  Componente monta                                           │
+│       ↓                                                     │
+│  useQuery detecta que não há cache                          │
+│       ↓                                                     │
+│  isLoading: true, isFetching: true ← AUTOMÁTICO             │
+│       ↓                                                     │
+│  queryFn() é executada automaticamente                      │
+│       ↓                                                     │
+│  Sucesso → isLoading: false, isSuccess: true                │
+│  Erro    → isLoading: false, isError: true                  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                    REFETCH (com cache)                      │
+├─────────────────────────────────────────────────────────────┤
+│  Dados ficam stale ou refetch() chamado                     │
+│       ↓                                                     │
+│  isLoading: false (tem cache!), isFetching: true            │
+│       ↓                                                     │
+│  UI continua mostrando dados antigos                        │
+│       ↓                                                     │
+│  Sucesso → data atualizado silenciosamente                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Comparação Lado a Lado
+
+| Conceito | Flutter/Cubit | React/TanStack Query |
+|----------|---------------|----------------------|
+| **Definição de Estados** | Classes explícitas (ProductLoading, etc.) | Automáticos (isLoading, isError, etc.) |
+| **Transição de Estado** | `emit(ProductLoading())` manual | Automático baseado no ciclo de vida |
+| **Carregamento Inicial** | `emit(ProductLoading())` | `isLoading: true` automático |
+| **Sucesso** | `emit(ProductLoaded(data))` | `isSuccess: true, data` automático |
+| **Erro** | `emit(ProductError(msg))` | `isError: true, error` automático |
+| **Refetch** | Implementar manualmente | `isFetching` diferencia de `isLoading` |
+| **Cache** | Implementar manualmente | Automático com `staleTime` |
+| **Retry** | Implementar manualmente | Automático com config `retry: 3` |
+
+### Fluxo Arquitetural
+
+```
+Flutter:
+  Screen → BlocBuilder → Cubit (emite estados) → Repository → DataSource
+                              ↓
+                     Você controla cada emit()
+
+React Native:
+  Screen → useQuery (estados automáticos) → Repository → DataSource
+                ↑
+         TanStack Query gerencia automaticamente:
+         - isLoading/isFetching
+         - cache (staleTime, gcTime)
+         - retry automático
+         - refetch em background
+         - deduplicação de requests
+```
+
+### Trade-offs
+
+#### Flutter/Cubit
+**Vantagens:**
+- ✅ Controle total e explícito sobre estados
+- ✅ Mais fácil de debugar (cada estado é uma classe)
+- ✅ Lógica de negócio clara no Cubit
+
+**Desvantagens:**
+- ❌ Mais boilerplate (estados, cubits, providers)
+- ❌ Cache manual (ou usar HydratedBloc)
+- ❌ Retry/refetch manual
+
+#### React/TanStack Query
+**Vantagens:**
+- ✅ Menos código (estados automáticos)
+- ✅ Cache inteligente built-in
+- ✅ Retry, refetch, deduplication automáticos
+- ✅ Background updates "de graça"
+
+**Desvantagens:**
+- ❌ Menos controle granular sobre estados
+- ❌ "Magia" pode dificultar debugging inicial
+- ❌ Estados são flags booleanas, não classes tipadas
+
+### Conclusão
+
+A diferença fundamental é:
+
+- **Flutter/Cubit:** Paradigma **imperativo** - você diz explicitamente quando mudar cada estado
+- **React/TanStack Query:** Paradigma **declarativo** - você descreve o que buscar e a biblioteca gerencia os estados
+
+Ambos são válidos. TanStack Query é a escolha idiomática no React porque:
+1. Hooks são o padrão do React
+2. Menos boilerplate para casos comuns (fetch de API)
+3. Cache, retry, refetch são necessidades universais que a biblioteca resolve
+
+**Lição:** Ao migrar entre Flutter e React Native, não tentar replicar Cubit 1:1. Abraçar o paradigma declarativo do React com TanStack Query traz benefícios (cache, retry) "de graça".
+
+---
+
 ## Conclusão Parcial
 
 A IA foi muito útil para:
