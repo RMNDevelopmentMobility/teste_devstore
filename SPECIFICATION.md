@@ -85,29 +85,22 @@ test_devstore/
 │   │   │   │   ├── entities/
 │   │   │   │   │   ├── Product.ts
 │   │   │   │   │   └── Category.ts
-│   │   │   │   ├── repositories/
-│   │   │   │   │   └── IProductRepository.ts
-│   │   │   │   ├── usecases/
-│   │   │   │   │   ├── GetProducts.ts
-│   │   │   │   │   └── GetProductById.ts
-│   │   │   │   └── errors/
-│   │   │   │       └── ProductError.ts
+│   │   │   │   └── repositories/
+│   │   │   │       └── ProductRepository.ts  # Interface abstrata
 │   │   │   │
 │   │   │   ├── data/             # 🔵 Camada de Dados
 │   │   │   │   ├── repositories/
 │   │   │   │   │   └── ProductRepositoryImpl.ts
-│   │   │   │   ├── models/
-│   │   │   │   │   ├── ProductModel.ts
-│   │   │   │   │   └── CategoryModel.ts
+│   │   │   │   ├── dtos/
+│   │   │   │   │   └── ProductDTO.ts  # DTOs com schemas Zod
 │   │   │   │   └── datasources/
-│   │   │   │       └── IProductDatasource.ts
+│   │   │   │       └── ProductRemoteDataSource.ts  # Interface abstrata
 │   │   │   │
 │   │   │   ├── external/         # 🟢 Camada Externa
 │   │   │   │   ├── datasources/
-│   │   │   │   │   └── ProductDatasourceImpl.ts
+│   │   │   │   │   └── ProductRemoteDataSourceImpl.ts
 │   │   │   │   └── graphql/
-│   │   │   │       ├── queries.ts
-│   │   │   │       └── fragments.ts
+│   │   │   │       └── queries.ts
 │   │   │   │
 │   │   │   ├── presentation/     # 🟣 Camada de Apresentação
 │   │   │   │   ├── screens/
@@ -122,42 +115,36 @@ test_devstore/
 │   │   │   │       └── useInfiniteProducts.ts
 │   │   │   │
 │   │   │   └── injection/        # 💉 DI da Feature
-│   │   │       └── product.container.ts
+│   │   │       └── ProductContainer.ts
 │   │   │
 │   │   └── cart/                 # Feature: Carrinho
 │   │       ├── domain/           # ⭕ Camada de Domínio
 │   │       │   ├── entities/
-│   │       │   │   └── CartItem.ts
-│   │       │   ├── usecases/
-│   │       │   │   ├── AddToCart.ts
-│   │       │   │   ├── RemoveFromCart.ts
-│   │       │   │   └── ClearCart.ts
-│   │       │   └── errors/
-│   │       │       └── CartError.ts
+│   │       │   │   ├── Cart.ts         # Entidade Cart e CartItem
+│   │       │   │   └── index.ts
+│   │       │   └── repositories/
+│   │       │       └── CartRepository.ts  # Interface abstrata
 │   │       │
 │   │       ├── data/             # 🔵 Camada de Dados
-│   │       │   └── models/
-│   │       │       └── CartItemModel.ts
+│   │       │   └── repositories/
+│   │       │       └── CartRepositoryImpl.ts  # Implementação
 │   │       │
-│   │       ├── external/         # 🟢 Camada Externa (se houver API)
-│   │       │   └── storage/
-│   │       │       └── CartStorageImpl.ts
+│   │       ├── external/         # 🟢 Camada Externa
+│   │       │   └── stores/
+│   │       │       └── ZustandCartStore.ts  # Zustand com persist
 │   │       │
 │   │       ├── presentation/     # 🟣 Camada de Apresentação
 │   │       │   ├── screens/
 │   │       │   │   └── CartScreen.tsx
 │   │       │   ├── components/
-│   │       │   │   ├── CartItem.tsx
+│   │       │   │   ├── CartItemCard.tsx
 │   │       │   │   ├── CartSummary.tsx
 │   │       │   │   └── EmptyCart.tsx
-│   │       │   ├── hooks/
-│   │       │   │   └── useCart.ts
-│   │       │   └── state/
-│   │       │       ├── cart.store.ts
-│   │       │       └── cart.types.ts
+│   │       │   └── hooks/
+│   │       │       └── useCart.ts  # Usa useSyncExternalStore
 │   │       │
 │   │       └── injection/        # 💉 DI da Feature
-│   │           └── cart.container.ts
+│   │           └── CartContainer.ts
 │   │
 │   ├── design_system/            # 🎨 DESIGN SYSTEM (Compartilhado)
 │   │   ├── components/           # Componentes base reutilizáveis
@@ -190,41 +177,43 @@ test_devstore/
 │   │
 │   ├── core/                     # ⚙️ CORE/INFRASTRUCTURE (Compartilhado)
 │   │   ├── providers/            # React providers
-│   │   │   ├── QueryProvider.tsx
-│   │   │   ├── ErrorBoundary.tsx
-│   │   │   └── ThemeProvider.tsx
+│   │   │   └── QueryProvider.tsx
 │   │   │
-│   │   ├── services/             # Core services
-│   │   │   ├── logger/
-│   │   │   │   ├── Logger.service.ts
-│   │   │   │   ├── Logger.types.ts
-│   │   │   │   └── ILogger.ts
-│   │   │   └── storage/
-│   │   │       ├── Storage.service.ts
-│   │   │       └── IStorage.ts
+│   │   ├── errors/               # Erros base
+│   │   │   ├── AppError.ts       # Tipos de erro (NetworkError, etc.)
+│   │   │   └── index.ts
 │   │   │
-│   │   ├── config/               # Configurações globais
-│   │   │   ├── query.config.ts   # TanStack Query config
-│   │   │   ├── graphql.config.ts # GraphQL client config
-│   │   │   └── app.config.ts
+│   │   ├── either/               # Functional error handling
+│   │   │   └── index.ts          # Either<L, R> type
 │   │   │
-│   │   └── utils/                # Utilitários compartilhados
-│   │       ├── either.ts         # Either<L, R> type (functional)
-│   │       ├── validators.ts
-│   │       └── formatters.ts
+│   │   ├── logger/               # Logger service
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── storage/              # Storage abstraction
+│   │   │   ├── StorageService.ts           # Interface abstrata
+│   │   │   ├── AsyncStorageService.ts      # Implementação AsyncStorage
+│   │   │   ├── zustandStorageAdapter.ts    # Adapter para Zustand persist
+│   │   │   └── index.ts
+│   │   │
+│   │   └── graphql/              # GraphQL client abstraction
+│   │       ├── graphql-client.ts # Singleton com timeout handling
+│   │       └── index.ts
 │   │
 │   └── shared/                   # 🔗 SHARED (Código compartilhado entre features)
-│       ├── errors/               # Erros base compartilhados
-│       │   ├── AppError.ts       # Base error class
-│       │   ├── NetworkError.ts
-│       │   ├── ValidationError.ts
-│       │   └── NotFoundError.ts
+│       ├── components/           # Componentes compartilhados
+│       │   ├── Toast/
+│       │   │   ├── ToastContext.tsx
+│       │   │   └── ToastContainer.tsx
+│       │   └── CartIcon/
+│       │       └── CartIcon.tsx
 │       │
 │       ├── types/                # Types globais
 │       │   └── global.d.ts
 │       │
 │       └── constants/            # Constantes globais
-│           └── api.constants.ts
+│           ├── api.ts            # API_CONFIG (endpoint, timeout)
+│           ├── query.ts          # QUERY_CONFIG (staleTime, gcTime)
+│           └── index.ts
 │
 ├── __tests__/                    # Testes (espelham a estrutura src/)
 │   ├── features/
@@ -401,25 +390,39 @@ query GetProduct($id: ID!) {
 - ✅ Toast de confirmação ao adicionar produto
 - ✅ Badge animado no ícone do carrinho
 
-**Zustand Store Structure:**
+**Arquitetura do Carrinho (Repository Pattern):**
+
 ```typescript
+// domain/entities/Cart.ts
 interface CartItem {
-  id: string
-  title: string
-  price: number
-  quantity: number
-  image: string
+  productId: number;
+  title: string;
+  price: number;
+  quantity: number;
+  imageUrl: string;
 }
 
-interface CartStore {
-  items: CartItem[]
-  addItem: (item: CartItem) => void
-  removeItem: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
-  clearCart: () => void
-  total: number
-  itemCount: number
+interface Cart {
+  items: CartItem[];
+  totalItems: number;
+  totalPrice: number;
 }
+
+// domain/repositories/CartRepository.ts (Interface)
+interface CartRepository {
+  getCart(): Cart;
+  addToCart(params: AddToCartParams): void;
+  removeFromCart(productId: number): void;
+  updateQuantity(productId: number, quantity: number): void;
+  clearCart(): void;
+  subscribe(listener: (cart: Cart) => void): () => void;
+}
+
+// data/repositories/CartRepositoryImpl.ts (Implementação)
+// Usa ZustandCartStore internamente
+
+// external/stores/ZustandCartStore.ts
+// Zustand store isolado com persist middleware usando @core/storage
 ```
 
 ### 4.3 Feature: Safe Area e Layout Android
@@ -1080,108 +1083,121 @@ UI → Hook (useProducts) → TanStack Query → External DataSource → API
 
 ### 7.3 Mapeamento de Camadas
 
-#### Domain Layer (Mantido Puro)
+#### Domain Layer (Entidades e Interfaces)
 ```typescript
 // domain/entities/Product.ts
 export interface Product {
-  id: string
-  title: string
-  price: number
-  description: string
-  images: string[]
-  category: Category
+  id: number;
+  title: string;
+  price: number;
+  description: string;
+  images: string[];
+  category: Category;
 }
 
-// domain/usecases/GetProducts.ts
-import { Product } from '../entities/Product'
-import { IProductRepository } from '../repositories/IProductRepository'
-import { Either } from '@/core/utils/either'
-import { AppError } from '../errors/AppError'
+// domain/repositories/ProductRepository.ts (Interface Abstrata)
+import { Either } from '@core/either';
+import { AppError } from '@core/errors';
 
-export class GetProducts {
-  constructor(private repository: IProductRepository) {}
+export interface ProductRepository {
+  getProducts(params: GetProductsParams): Promise<Either<AppError, Product[]>>;
+  getProductById(id: number): Promise<Either<AppError, Product>>;
+}
+```
 
-  async execute(params: GetProductsParams): Promise<Either<AppError, Product[]>> {
-    return this.repository.getProducts(params)
+**Nota:** A camada Domain define apenas interfaces (contratos). Implementações ficam em Data/External.
+
+#### Data Layer (DTOs e Implementações)
+```typescript
+// data/dtos/ProductDTO.ts (com validação Zod)
+import { z } from 'zod';
+
+export const ProductDTOSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  price: z.number(),
+  // ...
+});
+
+export type ProductDTO = z.infer<typeof ProductDTOSchema>;
+
+// data/datasources/ProductRemoteDataSource.ts (Interface)
+export interface ProductRemoteDataSource {
+  getProducts(params: GetProductsParams): Promise<Either<AppError, ProductDTO[]>>;
+  getProductById(id: number): Promise<Either<AppError, ProductDTO>>;
+}
+
+// data/repositories/ProductRepositoryImpl.ts (Implementação)
+export class ProductRepositoryImpl implements ProductRepository {
+  constructor(private remoteDataSource: ProductRemoteDataSource) {}
+
+  async getProducts(params: GetProductsParams): Promise<Either<AppError, Product[]>> {
+    const result = await this.remoteDataSource.getProducts(params);
+    return result.map(dtos => dtos.map(ProductMapper.toDomain));
   }
 }
 ```
 
-**Nota:** No React Native, podemos simplificar UseCases para funções puras ao invés de classes, mantendo os mesmos princípios.
-
-#### Data Layer (Contratos)
+#### External Layer (GraphQL)
 ```typescript
-// data/repositories/IProductRepository.ts (Interface)
-export interface IProductRepository {
-  getProducts(params: GetProductsParams): Promise<Either<AppError, Product[]>>
-  getProductById(id: string): Promise<Either<AppError, Product>>
-}
+// external/datasources/ProductRemoteDataSourceImpl.ts
+import { graphqlClient } from '@core/graphql';
+import { GET_PRODUCTS } from '../graphql/queries';
 
-// data/repositories/ProductRepositoryImpl.ts (Implementação)
-export class ProductRepositoryImpl implements IProductRepository {
-  constructor(private datasource: IProductDatasource) {}
-
-  async getProducts(params: GetProductsParams): Promise<Either<AppError, Product[]>> {
+export class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
+  async getProducts(params: GetProductsParams): Promise<Either<AppError, ProductDTO[]>> {
     try {
-      const models = await this.datasource.fetchProducts(params)
-      const entities = models.map(model => model.toEntity())
-      return right(entities)
+      const response = await graphqlClient.request<ProductsResponseDTO>(GET_PRODUCTS, params);
+      const validation = ProductsResponseDTOSchema.safeParse(response);
+
+      if (!validation.success) {
+        return left(validationError('Invalid data'));
+      }
+
+      return right(validation.data.products);
     } catch (error) {
-      return left(this.handleError(error))
+      return left(networkError('Failed to fetch products', error));
     }
   }
 }
 ```
 
-#### External Layer (API)
+#### Injection Layer (DI Container)
 ```typescript
-// external/datasources/ProductDatasourceImpl.ts
-export class ProductDatasourceImpl implements IProductDatasource {
-  constructor(private graphqlClient: GraphQLClient) {}
+// injection/ProductContainer.ts
+import { ProductRemoteDataSourceImpl } from '../external/datasources/ProductRemoteDataSourceImpl';
+import { ProductRepositoryImpl } from '../data/repositories/ProductRepositoryImpl';
 
-  async fetchProducts(params: GetProductsParams): Promise<ProductModel[]> {
-    const { data } = await this.graphqlClient.query({
-      query: GET_PRODUCTS_QUERY,
-      variables: params,
-    })
+const remoteDataSource = new ProductRemoteDataSourceImpl();
+const repository = new ProductRepositoryImpl(remoteDataSource);
 
-    return data.products.map(dto => ProductModel.fromDTO(dto))
-  }
-}
+export const productContainer = {
+  remoteDataSource,
+  repository,
+};
 ```
 
 #### Presentation Layer (Hooks)
 ```typescript
-// presentation/hooks/products/useProducts.ts
-import { useQuery } from '@tanstack/react-query'
-import { GetProducts } from '@/domain/usecases/GetProducts'
-import { productRepository } from '@/injection/container'
+// presentation/hooks/useProducts.ts
+import { useQuery } from '@tanstack/react-query';
+import { productContainer } from '../../injection/ProductContainer';
+import { QUERY_CONFIG } from '@shared/constants';
 
 export function useProducts(params: GetProductsParams) {
   return useQuery({
     queryKey: ['products', params],
     queryFn: async () => {
-      const useCase = new GetProducts(productRepository)
-      const result = await useCase.execute(params)
+      const result = await productContainer.repository.getProducts(params);
 
-      // Error handling
       if (result.isLeft()) {
-        throw result.value // AppError
+        throw result.value;
       }
 
-      return result.value // Product[]
+      return result.value;
     },
-  })
-}
-
-// Uso no componente
-function ProductListScreen() {
-  const { data, error, isLoading } = useProducts({ limit: 20, offset: 0 })
-
-  if (isLoading) return <LoadingState />
-  if (error) return <ErrorState error={error} />
-
-  return <ProductList products={data} />
+    staleTime: QUERY_CONFIG.STALE_TIME,
+  });
 }
 ```
 
@@ -1257,18 +1273,26 @@ Esta abordagem demonstra conhecimento de Clean Architecture enquanto é pragmát
 
 **Configuração:**
 ```typescript
-// shared/lib/query/client.ts
+// shared/constants/query.ts
+export const QUERY_CONFIG = {
+  STALE_TIME: 5 * 60 * 1000,  // 5 minutos
+  GC_TIME: 10 * 60 * 1000,    // 10 minutos
+} as const;
+
+// core/providers/QueryProvider.tsx
+import { QUERY_CONFIG } from '@shared/constants';
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutos
-      cacheTime: 1000 * 60 * 30, // 30 minutos
+      staleTime: QUERY_CONFIG.STALE_TIME,
+      gcTime: QUERY_CONFIG.GC_TIME,
       retry: 3,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },
   },
-})
+});
 ```
 
 ### 8.2 Client State (Zustand)
@@ -1281,27 +1305,28 @@ export const queryClient = new QueryClient({
 
 **Estrutura:**
 ```typescript
-// features/cart/store/cart.store.ts
+// features/cart/external/stores/ZustandCartStore.ts
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { asyncStorageService, zustandStorageAdapter } from '@core/storage'
 
-export const useCartStore = create(
+const zustandStorage = zustandStorageAdapter(asyncStorageService)
+
+export const useZustandCartStore = create(
   persist(
-    (set, get) => ({
-      items: [],
-      addItem: (item) => set((state) => ({
-        items: [...state.items, item]
-      })),
-      // ... outras ações
+    (set) => ({
+      cart: createEmptyCart(),
+      setItems: (items) => set({ cart: createCart(items) }),
     }),
     {
       name: 'cart-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => zustandStorage),
     }
   )
 )
 ```
+
+**Nota:** O Zustand Store fica em `/external/stores/` e usa a abstração `@core/storage` ao invés de importar AsyncStorage diretamente. O hook `useCart` em `/presentation/hooks/` consome o repositório via `CartContainer`.
 
 ---
 
@@ -1317,26 +1342,25 @@ export const useCartStore = create(
 
 **Exemplo:**
 ```typescript
-// __tests__/unit/stores/cart.store.test.ts
+// __tests__/unit/hooks/useCart.test.ts
 import { renderHook, act } from '@testing-library/react-hooks'
-import { useCartStore } from '@/features/cart/store/cart.store'
+import { useCart } from '@/features/cart/presentation/hooks/useCart'
 
-describe('CartStore', () => {
+describe('useCart', () => {
   it('should add item to cart', () => {
-    const { result } = renderHook(() => useCartStore())
+    const { result } = renderHook(() => useCart())
 
     act(() => {
-      result.current.addItem({
-        id: '1',
+      result.current.addToCart({
+        productId: 1,
         title: 'Product',
         price: 100,
-        quantity: 1,
-        image: 'url'
+        imageUrl: 'url'
       })
     })
 
-    expect(result.current.items).toHaveLength(1)
-    expect(result.current.total).toBe(100)
+    expect(result.current.cart.items).toHaveLength(1)
+    expect(result.current.cart.totalPrice).toBe(100)
   })
 })
 ```
@@ -1455,12 +1479,27 @@ describe('ProductCard', () => {
 - **Desvantagem:** Sem features avançadas (optimistic updates, etc.)
 - **Decisão:** GraphQL-Request + React Query (como sugerido no teste)
 
-### 10.3 Por que MMKV ao invés de AsyncStorage?
-- **Vantagem:** 30x mais rápido
-- **Vantagem:** Sincronizado (não async)
-- **Vantagem:** Menor consumo de memória
-- **Desvantagem:** Dependência nativa (precisa rebuild)
-- **Decisão:** Começar com AsyncStorage, migrar para MMKV se necessário
+### 10.3 Abstração de Storage
+
+Criamos uma abstração em `@core/storage` que permite trocar a implementação de storage facilmente:
+
+```typescript
+// core/storage/StorageService.ts (Interface)
+export interface StorageService {
+  getItem(key: string): Promise<string | null>;
+  setItem(key: string, value: string): Promise<void>;
+  removeItem(key: string): Promise<void>;
+}
+
+// core/storage/zustandStorageAdapter.ts
+export const zustandStorageAdapter = (storageService: StorageService): StateStorage => ({
+  getItem: async (name) => storageService.getItem(name),
+  setItem: async (name, value) => storageService.setItem(name, value),
+  removeItem: async (name) => storageService.removeItem(name),
+});
+```
+
+**Decisão:** Implementação atual usa AsyncStorage. Para migrar para MMKV, basta criar `MMKVStorageService` implementando `StorageService`.
 
 ### 10.4 Estrutura Feature-Based vs Domain-Driven
 - **Feature-Based:** Agrupa por funcionalidade (`features/products`, `features/cart`)
@@ -1576,4 +1615,13 @@ export default function ProductScreen() {
 
 **Documento criado por:** Claude Code (AI Assistant)
 **Data:** 2026-01-29
-**Versão:** 1.0
+**Última atualização:** 2026-02-03
+**Versão:** 1.1
+
+### Changelog v1.1
+- Atualizada estrutura de pastas para refletir implementação real
+- Adicionado Repository Pattern na feature /cart
+- Adicionada abstração de Storage em @core/storage
+- Adicionada abstração de GraphQL Client em @core/graphql
+- Centralização de configurações em QUERY_CONFIG
+- Atualizado mapeamento de camadas com exemplos reais

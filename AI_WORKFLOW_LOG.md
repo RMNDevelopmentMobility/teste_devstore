@@ -1016,22 +1016,30 @@ new GraphQLClient(endpoint, {
   timeout: API_CONFIG.TIMEOUT,  // Não existe!
 });
 
-// ✅ DEPOIS (correto)
+// ✅ DEPOIS (correto para React Native)
+const createTimeoutSignal = (timeoutMs: number): AbortSignal => {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
+};
+
 new GraphQLClient(endpoint, {
   fetch: (url, options) =>
     fetch(url, {
       ...options,
-      signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+      signal: createTimeoutSignal(API_CONFIG.TIMEOUT),
     }),
 });
 ```
+
+**Nota:** `AbortSignal.timeout()` não é suportado no React Native/Hermes. Usamos `AbortController` com `setTimeout` como alternativa compatível.
 
 ### Benefícios da Correção
 
 ✅ **Separação Clara:** Infraestrutura em `/core`, queries específicas em `/features`
 ✅ **Reutilização:** Qualquer feature pode usar `@core/graphql`
 ✅ **Independência:** Features não dependem umas das outras
-✅ **Type Safety:** Timeout implementado corretamente com AbortSignal
+✅ **Compatibilidade:** Timeout implementado com AbortController (suportado no React Native)
 
 ### Conclusão
 

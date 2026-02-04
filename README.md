@@ -90,7 +90,11 @@ src/features/
 │   ├── presentation/  # Screens, components, hooks
 │   └── injection/     # Container de DI
 ├── cart/
-│   └── ...mesma estrutura
+│   ├── domain/        # Entidades, interfaces de repositório
+│   ├── data/          # Repositórios
+│   ├── external/      # Zustand store
+│   ├── presentation/  # Screens, components, hooks
+│   └── injection/     # Container de DI
 ```
 
 **Por que:**
@@ -267,11 +271,12 @@ src/
 │   └── [feature]/
 │       ├── domain/     # Entidades, interfaces de repositório
 │       ├── data/       # DTOs, repositórios, interfaces de datasource
-│       ├── external/   # Implementações de datasource, queries GraphQL
-│       └── presentation/ # Screens, components, hooks
+│       ├── external/   # Implementações de datasource, stores
+│       ├── presentation/ # Screens, components, hooks
+│       └── injection/  # Container de DI
 ├── design_system/      # Tema e componentes base
-├── core/               # Erros, logger, either, graphql client
-└── shared/             # Componentes compartilhados
+├── core/               # Erros, logger, either, graphql, storage
+└── shared/             # Componentes e constantes compartilhados
 
 app/                    # Expo Router (file-based routes)
 ├── _layout.tsx         # Layout raiz
