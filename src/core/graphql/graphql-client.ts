@@ -2,6 +2,12 @@ import { GraphQLClient } from 'graphql-request';
 import { API_CONFIG } from '@shared/constants';
 import { logger } from '@core/logger';
 
+const createTimeoutSignal = (timeoutMs: number): AbortSignal => {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
+};
+
 export class GraphQLClientSingleton {
   private static instance: GraphQLClient | null = null;
 
@@ -16,7 +22,7 @@ export class GraphQLClientSingleton {
         fetch: (url, options) =>
           fetch(url, {
             ...options,
-            signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+            signal: createTimeoutSignal(API_CONFIG.TIMEOUT),
           }),
       });
 
